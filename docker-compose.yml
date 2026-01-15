@@ -1,0 +1,10 @@
+
+services:
+  app:
+    build: .
+    container_name: fastapi_vite
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    env_file:
+      - .env
