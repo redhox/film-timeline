@@ -3,32 +3,42 @@ import "./App.css";
 
 function App() {
   const [movies, setMovies] = useState([]);
+  const [imdbID, setImdbID] = useState("");
   const timelineRef = useRef(null);
 
-  // Charger les films depuis l'API FastAPI
-  useEffect(() => {
+  const loadMovies = () => {
     fetch("/api/movies")
       .then((res) => res.json())
       .then((data) => setMovies(data));
+  };
+
+  useEffect(() => {
+    loadMovies();
   }, []);
 
-  // Grouper les films par année
+  const importMovie = async () => {
+    if (!imdbID) return;
+
+    await fetch(`/api/movies/import/${imdbID}`, {
+      method: "POST",
+    });
+
+    setImdbID("");
+    loadMovies();
+  };
+
   const groupedByYear = movies.reduce((acc, movie) => {
     acc[movie.year] = acc[movie.year] || [];
     acc[movie.year].push(movie);
     return acc;
   }, {});
 
-  // Trier les années numériquement
-  const years = Object.keys(groupedByYear)
-    .sort((a, b) => Number(a) - Number(b));
+  const years = Object.keys(groupedByYear).sort((a, b) => Number(a) - Number(b));
 
-  // Générer la liste des décennies
   const decades = Array.from(
     new Set(years.map((y) => Math.floor(Number(y) / 10) * 10))
   );
 
-  // Scroll vers une année spécifique
   const scrollToYear = (year) => {
     const timeline = timelineRef.current;
     if (!timeline) return;
@@ -40,17 +50,25 @@ function App() {
 
   return (
     <div className="container">
-      {/* Barre des dizaines */}
+      {/* INPUT HAUT DROITE */}
+      <div className="top-bar">
+        <input
+          type="text"
+          placeholder="IMDb ID (ex: tt0017136)"
+          value={imdbID}
+          onChange={(e) => setImdbID(e.target.value)}
+        />
+        <button onClick={importMovie}>Importer</button>
+      </div>
+
+      {/* Barre des décennies */}
       <div className="decade-bar">
         {decades.map((decade) => (
           <button
             key={decade}
             className="decade-btn"
             onClick={() => {
-              // trouver la première année de cette décennie existante
-              const targetYear = years.find(
-                (y) => Number(y) >= decade
-              );
+              const targetYear = years.find((y) => Number(y) >= decade);
               if (targetYear) scrollToYear(targetYear);
             }}
           >
@@ -59,7 +77,7 @@ function App() {
         ))}
       </div>
 
-      {/* Timeline principale */}
+      {/* Timeline */}
       <div className="timeline" ref={timelineRef}>
         {years.map((year) => (
           <div key={year} className="year-column" data-year={year}>
