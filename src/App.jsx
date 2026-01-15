@@ -88,6 +88,13 @@ function App() {
                   <div className="poster-wrapper">
                     <img src={movie.poster} alt={movie.title} />
                     <div className="overlay">
+                    <button
+                        className="copy-btn"
+                        onClick={() => navigator.clipboard.writeText(movie.title)}
+                        title="Copier le titre"
+                      >
+                        ⧉
+                      </button>
                       <a
                         className="title"
                         href={`https://www.imdb.com/title/${movie.imdbID}`}
